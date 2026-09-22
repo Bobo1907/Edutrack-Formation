@@ -1,0 +1,12 @@
+{
+  "name": "edutrack-formation",
+  "version": "4.0.0",
+  "private": true,
+  "description": "EduTrack Formation - portail de formations vidéo avec utilisateurs simples, administration et authentification serveur",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.7"
+  }
+}

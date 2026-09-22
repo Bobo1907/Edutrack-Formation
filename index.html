@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EduTrack Formation</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="/">
+    <span class="logo-mark">E</span>
+    <span><b>EduTrack</b><small>FORMATION</small></span>
+  </a>
+  <nav>
+    <a class="nav-active" href="/">Formations</a>
+    <a href="/admin.html" class="admin-link">Administration</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="eyebrow">🎓 EDUTRACK FORMATION</span>
+      <h1>Apprenez à utiliser EduTrack, simplement.</h1>
+      <p>Retrouvez vos formations vidéo au même endroit et progressez étape par étape.</p>
+      <div class="hero-actions">
+        <a href="#formations" class="hero-btn">Voir les formations <span>→</span></a>
+        <span class="hero-note">Accessible sur téléphone, tablette et ordinateur</span>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="orb orb-a"></div><div class="orb orb-b"></div>
+      <div class="screen-card">
+        <div class="screen-top"><span></span><span></span><span></span></div>
+        <div class="screen-body">
+          <div class="screen-video"><span>▶</span></div>
+          <div class="screen-line wide"></div><div class="screen-line"></div>
+          <div class="screen-progress"><i></i></div>
+        </div>
+      </div>
+      <div class="float-card one">📚 <b>Formation</b><small>Progression</small></div>
+      <div class="float-card two">✓ <b>Terminé</b></div>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="progress-panel">
+      <div class="panel-title">
+        <div><span class="mini-label">VOTRE PARCOURS</span><h2>Votre progression</h2></div>
+        <span id="progressText" class="progress-number">0%</span>
+      </div>
+      <div class="progress-layout">
+        <div class="progress-ring" id="progressRing"><strong id="progressPercent">0%</strong><span>progression</span></div>
+        <div class="progress-info">
+          <h3 id="progressTitle">Commencez votre parcours</h3>
+          <p id="progressDetail">Vos vidéos regardées apparaîtront ici.</p>
+          <div class="bar"><i id="progressBar"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="quick-panel">
+      <span class="mini-label">BIBLIOTHÈQUE</span>
+      <div class="quick-number" id="videoCount">0</div>
+      <h3>formations disponibles</h3>
+      <p>Administration, pédagogie, comptabilité et plus.</p>
+    </div>
+  </section>
+
+  <section id="formations" class="library">
+    <div class="section-head">
+      <div>
+        <span class="mini-label">BIBLIOTHÈQUE DE FORMATIONS</span>
+        <h2>Toutes les formations</h2>
+        <p>Choisissez une formation et commencez immédiatement.</p>
+      </div>
+    </div>
+
+    <div class="tools">
+      <label class="search">
+        <span>⌕</span><input id="q" placeholder="Rechercher une formation…" autocomplete="off">
+      </label>
+      <select id="cat"><option value="">Toutes les catégories</option></select>
+    </div>
+
+    <div id="chips" class="chips"></div>
+    <div id="grid" class="grid"></div>
+  </section>
+</main>
+
+<footer>EduTrack Formation <span>•</span> Apprendre. Progresser. Maîtriser.</footer>
+<script src="app.js"></script>
+</body>
+</html>
