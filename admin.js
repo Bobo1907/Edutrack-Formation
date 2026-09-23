@@ -6,7 +6,77 @@ async function loadDashboard(){try{const d=await api('/api/videos');$('#sVideos'
 function showForm(){document.querySelector('#form').scrollIntoView({behavior:'smooth'});$('#form').classList.remove('hidden')}function hideForm(){$('#form').reset();$('#editId').value='';$('#formTitle').textContent='Ajouter une formation';$('#submitBtn').textContent='Ajouter la formation';$('#cancel').classList.add('hidden');$('#formError').textContent=''}
 async function renderFormations(){try{const d=await api('/api/videos');$('#formationTotal').textContent=`${d.total} formation(s)`;$('#list').innerHTML=d.videos.map(v=>`<div class="item"><div><b>${esc(v.title)}</b><div class="muted">${esc(v.category||'Formation')} ${v.duration?'• '+esc(v.duration):''}</div><small>${esc(v.description||'')}</small></div><div class="item-actions"><a class="ghost" href="/video.html?id=${encodeURIComponent(v.id)}" target="_blank">Voir</a><button class="ghost edit" data-id="${v.id}">Modifier</button><button class="danger del" data-id="${v.id}">Supprimer</button></div></div>`).join('')||'<p class="muted">Aucune formation.</p>';$$('.del').forEach(b=>b.onclick=async()=>{if(confirm('Supprimer cette formation ?')){await api('/api/videos/'+b.dataset.id,{method:'DELETE'});renderFormations();loadDashboard()}});$$('.edit').forEach(b=>b.onclick=async()=>{const d=await api('/api/videos/'+b.dataset.id),v=d.video;$('#editId').value=v.id;$('#title').value=v.title;$('#category').value=v.category;$('#description').value=v.description;$('#url').value=v.url;$('#duration').value=v.duration||'';$('#formTitle').textContent='Modifier la formation';$('#submitBtn').textContent='Enregistrer les modifications';$('#cancel').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})})}catch(e){$('#list').innerHTML='<p class="error">'+esc(e.message)+'</p>'}}
 async function renderCategories(){try{const d=await api('/api/videos');$('#categoryList').innerHTML=d.categories.map(c=>`<div class="quick-item"><b>▦ ${esc(c)}</b><span>${d.videos.filter(v=>v.category===c).length} formation(s)</span></div>`).join('')||'<p class="muted">Aucune catégorie.</p>'}catch(e){}}
-$('#form').onsubmit=async e=>{e.preventDefault();$('#formError').textContent='';const id=$('#editId').value,p={title:$('#title').value,category:$('#category').value,description:$('#description').value,url:$('#url').value,duration:$('#duration').value};try{await api(id?'/api/videos/'+id:'/api/videos',{method:id?'PUT':'POST',body:JSON.stringify(p)});hideForm();renderFormations();loadDashboard()}catch(x){$('#formError').textContent=x.message}};(async()=>{try{const d=await api('/api/me');d.authenticated?showApp():showLogin()}catch{showLogin()}})();
+$('#form').onsubmit=async e=>{
+  e.preventDefault();
+  $('#formError').textContent='';
+
+  const id=$('#editId').value;
+  const file=$('#videoFile').files[0];
+
+  try{
+    if(!id && file){
+      const formData=new FormData();
+
+      formData.append('title',$('#title').value);
+      formData.append('category',$('#category').value);
+      formData.append('description',$('#description').value);
+      formData.append('duration',$('#duration').value);
+      formData.append('video',file);
+
+      $('#submitBtn').disabled=true;
+      $('#submitBtn').textContent='Envoi de la vidéo…';
+
+      const r=await fetch('/api/videos/upload',{
+        method:'POST',
+        body:formData
+      });
+
+      let d={};
+      try{d=await r.json()}catch{}
+
+      if(!r.ok)throw Error(d.error||'Erreur lors de l’envoi');
+
+      hideForm();
+      renderFormations();
+      loadDashboard();
+      return;
+    }
+
+    if(!id && !file && !$('#url').value.trim()){
+      throw Error('Ajoutez une vidéo ou indiquez une URL vidéo');
+    }
+
+    const p={
+      title:$('#title').value,
+      category:$('#category').value,
+      description:$('#description').value,
+      url:$('#url').value,
+      duration:$('#duration').value
+    };
+
+    $('#submitBtn').disabled=true;
+
+    await api(
+      id?'/api/videos/'+id:'/api/videos',
+      {
+        method:id?'PUT':'POST',
+        body:JSON.stringify(p)
+      }
+    );
+
+    hideForm();
+    renderFormations();
+    loadDashboard();
+
+  }catch(x){
+    $('#formError').textContent=x.message;
+  }finally{
+    $('#submitBtn').disabled=false;
+    $('#submitBtn').textContent=
+      id?'Enregistrer les modifications':'Ajouter la formation';
+  }
+};
+(async()=>{try{const d=await api('/api/me');d.authenticated?showApp():showLogin()}catch{showLogin()}})();
 function showUserForm(){ $('#userForm').classList.remove('hidden'); $('#userForm').scrollIntoView({behavior:'smooth'}); }
 function hideUserForm(){ $('#userForm').reset(); $('#userEditId').value=''; $('#userFormTitle').textContent='Ajouter un utilisateur'; $('#userSubmit').textContent='Créer le compte'; $('#userPassword').placeholder='6 caractères minimum'; $('#cancelUser').classList.add('hidden'); $('#userError').textContent=''; }
 $('#newUser').onclick=()=>{hideUserForm();showUserForm()}; $('#cancelUser').onclick=hideUserForm;
