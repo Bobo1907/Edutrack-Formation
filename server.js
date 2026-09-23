@@ -53,4 +53,5 @@ async function api(req,res,u){
  return json(res,404,{error:'Route inconnue'})
 }
 (async()=>{await init();const server=http.createServer(async(req,res)=>{const u=new URL(req.url,`http://${req.headers.host||'localhost'}`);try{if(u.pathname.startsWith('/api/'))await api(req,res,u);else serveStatic(req,res,u.pathname)}catch(e){console.error(e);json(res,500,{error:'Erreur serveur'})}});
-server.listen(PORT,'0.0.0.0', ()=>console.log(`EduTrack Formation disponible sur http://localhost:${PORT}`));
+server.listen(PORT,'0.0.0.0', ()=>console.log(`EduTrack Formation disponible sur http://localhost:${PORT}`));})();
+
