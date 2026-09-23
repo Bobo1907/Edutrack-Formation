@@ -9,6 +9,16 @@ const multer=require('multer');
 const os=require('os');
 const ROOT=__dirname, DATA_DIR=path.join(ROOT,'data'), DB_FILE=path.join(DATA_DIR,'edutrack.sqlite'), VIDEO_DIR=path.join(ROOT,'videos');
 const PORT=Number(process.env.PORT||3000);
+cloudinary.config({
+  cloud_name:process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:process.env.CLOUDINARY_API_KEY,
+  api_secret:process.env.CLOUDINARY_API_SECRET
+});
+
+const upload=multer({
+  dest:os.tmpdir(),
+  limits:{fileSize:2*1024*1024*1024}
+});
 const ADMIN_USER=process.env.EDUTRACK_ADMIN_USER||'admin';
 const ADMIN_PASSWORD=process.env.EDUTRACK_ADMIN_PASSWORD||'Curry2002';
 const sessions=new Map();
