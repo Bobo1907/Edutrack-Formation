@@ -4,7 +4,9 @@ const path=require('path');
 const crypto=require('crypto');
 const {URL}=require('url');
 const sqlite3=require('sqlite3').verbose();
-
+const cloudinary=require('cloudinary').v2;
+const multer=require('multer');
+const os=require('os');
 const ROOT=__dirname, DATA_DIR=path.join(ROOT,'data'), DB_FILE=path.join(DATA_DIR,'edutrack.sqlite'), VIDEO_DIR=path.join(ROOT,'videos');
 const PORT=Number(process.env.PORT||3000);
 const ADMIN_USER=process.env.EDUTRACK_ADMIN_USER||'admin';
