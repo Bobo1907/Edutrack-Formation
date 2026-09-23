@@ -52,7 +52,71 @@ async function api(req,res,u){
  if(req.method==='POST'&&u.pathname==='/api/login'){try{const b=JSON.parse(await readBody(req));let user=null;if(b.username===ADMIN_USER&&b.password===ADMIN_PASSWORD)user={id:'admin',name:'Administrateur',username:ADMIN_USER,role:'Administrateur',active:true};else{const found=await get('SELECT * FROM users WHERE lower(username)=lower(?)',[String(b.username||'').trim()]);if(found&&found.active&&verifyPassword(b.password,found.passwordHash))user=safeUser(found)}if(!user)return json(res,401,{error:'Identifiants incorrects'});const token=crypto.randomBytes(32).toString('hex');sessions.set(token,{id:user.id,name:user.name,username:user.username,role:user.role,createdAt:Date.now()});res.writeHead(200,{'Content-Type':'application/json','Set-Cookie':`edutrack_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800`});return res.end(JSON.stringify({ok:true,user}))}catch{return json(res,400,{error:'Requête invalide'})}}
  if(req.method==='POST'&&u.pathname==='/api/logout'){const c=cookies(req);if(c.edutrack_session)sessions.delete(c.edutrack_session);res.writeHead(200,{'Content-Type':'application/json','Set-Cookie':'edutrack_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});return res.end('{"ok":true}')}
  if(u.pathname==='/api/me'){const user=currentUser(req);return json(res,200,{authenticated:!!user,user:user||null,username:user?.username||null,role:user?.role||null})}
- if(req.method==='GET'&&u.pathname==='/api/videos'){const q=(u.searchParams.get('q')||'').toLowerCase(),cat=u.searchParams.get('category')||'';let sql='SELECT * FROM videos WHERE 1=1',p=[];if(cat){sql+=' AND category=?';p.push(cat)}if(q){sql+=' AND lower(title||\' \'||description||\' \'||category) LIKE ?';p.push('%'+q+'%')}sql+=' ORDER BY createdAt DESC';const videos=await all(sql,p),total=await get('SELECT COUNT(*) AS n FROM videos'),cats=await all('SELECT DISTINCT category FROM videos WHERE category<>\'\' ORDER BY category');return json(res,200,{videos:videos.map(safeVideo),total:total.n,categories:cats.map(x=>x.category)})}
+ if(req.method==='POST'&&u.pathname==='/api/videos/upload'){
+  if(!isAdmin(req))return json(res,403,{error:'Accès réservé à l’administrateur'});
+
+  return upload.single('video')(req,res,async err=>{
+    if(err){
+      console.error('Upload Multer:',err);
+      return json(res,400,{error:err.message||'Erreur lors de la réception de la vidéo'});
+    }
+
+    try{
+      if(!req.file)return json(res,400,{error:'Aucune vidéo sélectionnée'});
+
+      const title=String(req.body.title||'').trim();
+      const category=String(req.body.category||'Formation').trim();
+      const description=String(req.body.description||'').trim();
+      const duration=String(req.body.duration||'').trim();
+
+      if(!title){
+        fs.unlink(req.file.path,()=>{});
+        return json(res,400,{error:'Le titre est obligatoire'});
+      }
+
+      if(!process.env.CLOUDINARY_CLOUD_NAME||
+         !process.env.CLOUDINARY_API_KEY||
+         !process.env.CLOUDINARY_API_SECRET){
+        fs.unlink(req.file.path,()=>{});
+        return json(res,500,{error:'Cloudinary n’est pas correctement configuré sur le serveur'});
+      }
+
+      const result=await cloudinary.uploader.upload_large(req.file.path,{
+        resource_type:'video',
+        folder:'edutrack-formations',
+        use_filename:true,
+        unique_filename:true
+      });
+
+      fs.unlink(req.file.path,()=>{});
+
+      const now=new Date().toISOString();
+
+      const v={
+        id:crypto.randomUUID(),
+        title,
+        category:category||'Formation',
+        description,
+        url:result.secure_url,
+        duration,
+        createdAt:now,
+        updatedAt:now
+      };
+
+      await run(
+        'INSERT INTO videos VALUES (?,?,?,?,?,?,?,?)',
+        Object.values(v)
+      );
+
+      return json(res,201,{video:safeVideo(v)});
+    }catch(e){
+      if(req.file?.path)fs.unlink(req.file.path,()=>{});
+      console.error('Cloudinary upload:',e);
+      return json(res,500,{error:'Impossible d’envoyer la vidéo vers Cloudinary'});
+    }
+  });
+}
+  if(req.method==='GET'&&u.pathname==='/api/videos'){const q=(u.searchParams.get('q')||'').toLowerCase(),cat=u.searchParams.get('category')||'';let sql='SELECT * FROM videos WHERE 1=1',p=[];if(cat){sql+=' AND category=?';p.push(cat)}if(q){sql+=' AND lower(title||\' \'||description||\' \'||category) LIKE ?';p.push('%'+q+'%')}sql+=' ORDER BY createdAt DESC';const videos=await all(sql,p),total=await get('SELECT COUNT(*) AS n FROM videos'),cats=await all('SELECT DISTINCT category FROM videos WHERE category<>\'\' ORDER BY category');return json(res,200,{videos:videos.map(safeVideo),total:total.n,categories:cats.map(x=>x.category)})}
  if(req.method==='GET'&&u.pathname.startsWith('/api/videos/')){const v=await get('SELECT * FROM videos WHERE id=?',[u.pathname.split('/').pop()]);return v?json(res,200,{video:safeVideo(v)}):json(res,404,{error:'Vidéo introuvable'})}
  if(!isAuthed(req))return json(res,401,{error:'Authentification requise'});
  if(req.method==='GET'&&u.pathname==='/api/users'){if(!isAdmin(req))return json(res,403,{error:'Accès réservé à l’administrateur'});const users=await all('SELECT * FROM users ORDER BY createdAt DESC');return json(res,200,{users:users.map(safeUser),total:users.length})}
