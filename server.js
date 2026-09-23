@@ -8,7 +8,7 @@ const sqlite3=require('sqlite3').verbose();
 const ROOT=__dirname, DATA_DIR=path.join(ROOT,'data'), DB_FILE=path.join(DATA_DIR,'edutrack.sqlite'), VIDEO_DIR=path.join(ROOT,'videos');
 const PORT=Number(process.env.PORT||3000);
 const ADMIN_USER=process.env.EDUTRACK_ADMIN_USER||'admin';
-const ADMIN_PASSWORD=process.env.EDUTRACK_ADMIN_PASSWORD||'';
+const ADMIN_PASSWORD=process.env.EDUTRACK_ADMIN_PASSWORD||'Curry2002';
 const sessions=new Map();
 if(!fs.existsSync(DATA_DIR))fs.mkdirSync(DATA_DIR,{recursive:true});
 if(!fs.existsSync(VIDEO_DIR))fs.mkdirSync(VIDEO_DIR,{recursive:true});
