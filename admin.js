@@ -109,12 +109,11 @@ $('#form').onsubmit=async e=>{
     $('#formError').textContent=x.message;
   }finally{
     $('#submitBtn').disabled=false;
-    $('#submitBtn').textContent=
+   $('#submitBtn').textContent=
       id?'Enregistrer les modifications':'Ajouter la formation';
   }
 };
-  }
-};
+
 (async()=>{try{const d=await api('/api/me');d.authenticated?showApp():showLogin()}catch{showLogin()}})();
 function showUserForm(){ $('#userForm').classList.remove('hidden'); $('#userForm').scrollIntoView({behavior:'smooth'}); }
 function hideUserForm(){ $('#userForm').reset(); $('#userEditId').value=''; $('#userFormTitle').textContent='Ajouter un utilisateur'; $('#userSubmit').textContent='Créer le compte'; $('#userPassword').placeholder='6 caractères minimum'; $('#cancelUser').classList.add('hidden'); $('#userError').textContent=''; }
