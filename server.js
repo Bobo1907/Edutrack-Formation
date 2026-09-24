@@ -81,12 +81,22 @@ async function api(req,res,u){
         return json(res,500,{error:'Cloudinary n’est pas correctement configuré sur le serveur'});
       }
 
-      const result=await cloudinary.uploader.upload_large(req.file.path,{
-        resource_type:'video',
-        folder:'edutrack-formations',
-        use_filename:true,
-        unique_filename:true
-      });
+      const result=await new Promise((resolve,reject)=>{
+  const stream=cloudinary.uploader.upload_large(
+    req.file.path,
+    {
+      resource_type:'video',
+      folder:'edutrack-formations',
+      use_filename:true,
+      unique_filename:true,
+      chunk_size:20*1024*1024
+    },
+    (error,result)=>{
+      if(error)return reject(error);
+      resolve(result);
+    }
+  );
+});
 
       fs.unlink(req.file.path,()=>{});
 
