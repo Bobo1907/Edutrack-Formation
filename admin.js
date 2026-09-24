@@ -11,40 +11,44 @@ const CLOUDINARY_UPLOAD_PRESET='edutrack_videos';
 
 let cloudinaryUrl='';
 
-const cloudinaryWidget=cloudinary.createUploadWidget(
-  {
-    cloudName:CLOUDINARY_CLOUD_NAME,
-    uploadPreset:CLOUDINARY_UPLOAD_PRESET,
-    resourceType:'video',
-    sources:['local'],
-    multiple:false,
-    clientAllowedFormats:['mp4','webm','mov','ogg'],
-    showAdvancedOptions:false
-  },
-  (error,result)=>{
-    if(error){
-      console.error(error);
-      $('#formError').textContent='Erreur lors de l’envoi de la vidéo.';
-      $('#submitBtn').disabled=false;
-      $('#submitBtn').textContent='Ajouter la formation';
-      return;
-    }
 
-    if(result.event==='upload-added'){
-      $('#formError').textContent='Préparation de l’envoi…';
-      $('#submitBtn').disabled=true;
-      $('#submitBtn').textContent='Envoi de la vidéo…';
-    }
+let cloudinaryWidget=null;
 
-    if(result.event==='success'){
-      cloudinaryUrl=result.info.secure_url;
-      $('#url').value=cloudinaryUrl;
-      $('#formError').textContent='✓ Vidéo envoyée avec succès. Tu peux maintenant enregistrer la formation.';
-      $('#submitBtn').disabled=false;
-      $('#submitBtn').textContent='Ajouter la formation';
-    }
+function openCloudinaryUpload(){
+  if(!window.cloudinary){
+    $('#formError').textContent='Cloudinary n’est pas chargé. Rechargez la page.';
+    return;
   }
-);
+
+  if(!cloudinaryWidget){
+    cloudinaryWidget=window.cloudinary.createUploadWidget(
+      {
+        cloudName:CLOUDINARY_CLOUD_NAME,
+        uploadPreset:CLOUDINARY_UPLOAD_PRESET,
+        resourceType:'video',
+        sources:['local'],
+        multiple:false,
+        clientAllowedFormats:['mp4','webm','mov','ogg']
+      },
+      (error,result)=>{
+        if(error){
+          console.error(error);
+          $('#formError').textContent='Erreur pendant l’envoi de la vidéo.';
+          return;
+        }
+
+        if(result.event==='success'){
+          cloudinaryUrl=result.info.secure_url;
+          $('#url').value=cloudinaryUrl;
+          $('#formError').textContent=
+            '✓ Vidéo envoyée avec succès. Vous pouvez enregistrer la formation.';
+        }
+      }
+    );
+  }
+
+  cloudinaryWidget.open();
+}
 
 const videoFile=$('#videoFile');
 
@@ -61,9 +65,7 @@ if(videoFile){
 
   oldLabel.appendChild(cloudinaryButton);
 
-  cloudinaryButton.onclick=()=>{
-    cloudinaryWidget.open();
-  };
+  cloudinaryButton.onclick=openCloudinaryUpload;
 }
 
 $('#form').onsubmit=async e=>{
@@ -74,7 +76,7 @@ $('#form').onsubmit=async e=>{
   const url=$('#url').value.trim()||cloudinaryUrl;
 
   try{
-    if(!id && !url){
+    if(!id&&!url){
       throw Error('Choisissez une vidéo ou indiquez une URL vidéo');
     }
 
@@ -87,9 +89,7 @@ $('#form').onsubmit=async e=>{
     };
 
     $('#submitBtn').disabled=true;
-    $('#submitBtn').textContent=id
-      ?'Enregistrement…'
-      :'Enregistrement…';
+    $('#submitBtn').textContent='Enregistrement…';
 
     await api(
       id?'/api/videos/'+id:'/api/videos',
@@ -113,71 +113,6 @@ $('#form').onsubmit=async e=>{
       id?'Enregistrer les modifications':'Ajouter la formation';
   }
 };
-
-  const id=$('#editId').value;
-  const file=$('#videoFile').files[0];
-
-  try{
-    if(!id && file){
-      const formData=new FormData();
-
-      formData.append('title',$('#title').value);
-      formData.append('category',$('#category').value);
-      formData.append('description',$('#description').value);
-      formData.append('duration',$('#duration').value);
-      formData.append('video',file);
-
-      $('#submitBtn').disabled=true;
-      $('#submitBtn').textContent='Envoi de la vidéo…';
-
-      const r=await fetch('/api/videos/upload',{
-        method:'POST',
-        body:formData
-      });
-
-      let d={};
-      try{d=await r.json()}catch{}
-
-      if(!r.ok)throw Error(d.error||'Erreur lors de l’envoi');
-
-      hideForm();
-      renderFormations();
-      loadDashboard();
-      return;
-    }
-
-    if(!id && !file && !$('#url').value.trim()){
-      throw Error('Ajoutez une vidéo ou indiquez une URL vidéo');
-    }
-
-    const p={
-      title:$('#title').value,
-      category:$('#category').value,
-      description:$('#description').value,
-      url:$('#url').value,
-      duration:$('#duration').value
-    };
-
-    $('#submitBtn').disabled=true;
-
-    await api(
-      id?'/api/videos/'+id:'/api/videos',
-      {
-        method:id?'PUT':'POST',
-        body:JSON.stringify(p)
-      }
-    );
-
-    hideForm();
-    renderFormations();
-    loadDashboard();
-
-  }catch(x){
-    $('#formError').textContent=x.message;
-  }finally{
-    $('#submitBtn').disabled=false;
-    $('#submitBtn').textContent=
-      id?'Enregistrer les modifications':'Ajouter la formation';
   }
 };
 (async()=>{try{const d=await api('/api/me');d.authenticated?showApp():showLogin()}catch{showLogin()}})();
